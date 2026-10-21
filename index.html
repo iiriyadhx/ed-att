@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>تسجيل الحضور — الطوارئ</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .levels label { margin: 0; }
+    .levels input { position: absolute; opacity: 0; pointer-events: none; }
+    .levels span {
+      display: block; text-align: center; padding: 12px 0; border-radius: 10px; font-weight: 700;
+      border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer;
+    }
+    .levels input:checked + span { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+    .levels input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 id="hospitalName">قسم الطوارئ</h1>
+    <p>تسجيل حضور المقيمين · Resident attendance</p>
+  </header>
+
+  <div class="card">
+    <div class="row"><span class="muted">رمز الشاشة</span><span class="pill" id="qrPill">—</span></div>
+    <div class="row" style="margin-top:10px"><span class="muted">الموقع</span><span class="pill" id="locPill">يُحدَّد عند الضغط</span></div>
+  </div>
+
+  <div class="card">
+    <label for="fullName">الاسم الثلاثي</label>
+    <input id="fullName" autocomplete="name" maxlength="60" placeholder="مثال: محمد عبدالله الأحمد">
+
+    <label>المستوى</label>
+    <div class="levels" role="radiogroup" aria-label="المستوى">
+      <label><input type="radio" name="level" value="R1"><span>R1</span></label>
+      <label><input type="radio" name="level" value="R2"><span>R2</span></label>
+      <label><input type="radio" name="level" value="R3"><span>R3</span></label>
+      <label><input type="radio" name="level" value="R4"><span>R4</span></label>
+    </div>
+
+    <button id="btnSubmit">تسجيل الحضور</button>
+    <div id="result"></div>
+    <p class="muted" style="margin-top:12px">يُقرأ موقعك لحظة الضغط فقط للتأكد أنك داخل نطاق المستشفى، ولا يتم تتبعك.</p>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  // ---- Capture the rotating QR token, then remove it from the address bar so it isn't bookmarked/shared.
+  const params = new URLSearchParams(location.search);
+  if (params.get('t')) {
+    try { sessionStorage.setItem('qrToken', params.get('t')); sessionStorage.setItem('qrAt', String(Date.now())); } catch (e) {}
+    history.replaceState(null, '', location.pathname);
+  }
+  function qrToken() { try { return sessionStorage.getItem('qrToken') || ''; } catch (e) { return ''; } }
+  function qrAgeSec() { try { return (Date.now() - Number(sessionStorage.getItem('qrAt') || 0)) / 1000; } catch (e) { return 1e9; } }
+
+  let requireQr = true;
+  const NAME_KEY = 'ed_att_last_name', LEVEL_KEY = 'ed_att_last_level';
+
+  function setPill(id, text, cls) { const el = $(id); el.textContent = text; el.className = 'pill' + (cls ? ' ' + cls : ''); }
+  function result(code, cls, extra) {
+    $('result').innerHTML = '<div class="result ' + cls + '">' + msg(code) + (extra ? '<div class="en">' + esc(extra) + '</div>' : '') + '</div>';
+  }
+  function refreshQrPill() {
+    if (!requireQr) { setPill('qrPill', 'غير مطلوب'); return; }
+    if (!qrToken()) setPill('qrPill', 'امسح رمز الشاشة', 'warn');
+    else if (qrAgeSec() > 150) setPill('qrPill', 'قديم — أعد المسح', 'warn');
+    else setPill('qrPill', 'تم المسح', 'ok');
+  }
+  function selectedLevel() { const el = document.querySelector('input[name=level]:checked'); return el ? el.value : ''; }
+
+  // Convenience only: remember this phone's own name/level. The server enforces the rules.
+  const lastName = store.get(NAME_KEY), lastLevel = store.get(LEVEL_KEY);
+  if (lastName) $('fullName').value = lastName;
+  if (lastLevel) { const r = document.querySelector('input[name=level][value="' + lastLevel + '"]'); if (r) r.checked = true; }
+
+  api('info').then(function (r) {
+    if (r.hospitalName) $('hospitalName').textContent = r.hospitalName;
+    if (typeof r.requireQr === 'boolean') requireQr = r.requireQr;
+    refreshQrPill();
+  });
+  refreshQrPill();
+
+  // Same rules as the server, for an immediate hint only.
+  function looksLikeTripleName(n) {
+    const words = n.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+    return words.length >= 3 && !/[0-9٠-٩]/.test(n);
+  }
+
+  // ---- Location: watch briefly and keep the most accurate fix.
+  function getBestPosition(maxWaitMs, goodEnoughM) {
+    return new Promise(function (resolve, reject) {
+      if (!('geolocation' in navigator)) { reject('NO_GEOLOCATION'); return; }
+      let best = null, done = false, watchId = null;
+      const finish = function (err) {
+        if (done) return; done = true;
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        clearTimeout(timer);
+        if (err) reject(err); else if (best) resolve(best); else reject('LOCATION_TIMEOUT');
+      };
+      const timer = setTimeout(function () { finish(); }, maxWaitMs);
+      watchId = navigator.geolocation.watchPosition(function (pos) {
+        if (!best || pos.coords.accuracy < best.coords.accuracy) best = pos;
+        setPill('locPill', 'دقة ±' + Math.round(best.coords.accuracy) + ' م', best.coords.accuracy <= 30 ? 'ok' : 'warn');
+        if (pos.coords.accuracy <= goodEnoughM) finish();
+      }, function (err) {
+        if (err.code === 1) finish('LOCATION_DENIED');
+      }, { enableHighAccuracy: true, maximumAge: 0, timeout: maxWaitMs });
+    });
+  }
+
+  $('btnSubmit').onclick = async function () {
+    const btn = this;
+    const fullName = $('fullName').value.replace(/\s+/g, ' ').trim();
+    const level = selectedLevel();
+    if (!looksLikeTripleName(fullName)) { result('NAME_INVALID', 'bad'); $('fullName').focus(); return; }
+    if (!level) { result('LEVEL_INVALID', 'bad'); return; }
+
+    btn.disabled = true;
+    $('result').innerHTML = '';
+    setPill('locPill', 'جاري تحديد الموقع…', 'warn');
+    let pos;
+    try {
+      pos = await getBestPosition(15000, 15);
+    } catch (code) {
+      setPill('locPill', 'فشل', 'bad');
+      result(code, 'bad');
+      btn.disabled = false;
+      return;
+    }
+    setPill('locPill', 'جاري التحقق على الخادم…', 'warn');
+    const r = await api('submitAttendance', {
+      fullName: fullName, level: level, deviceId: deviceId(),
+      lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy,
+      fixAgeMs: Math.max(0, Date.now() - pos.timestamp),
+      qrToken: qrToken()
+    });
+    btn.disabled = false;
+    // A success state is shown ONLY when the server confirms the record was committed.
+    if (r.ok && r.code === 'CONFIRMED') {
+      store.set(NAME_KEY, fullName); store.set(LEVEL_KEY, level);
+      setPill('locPill', 'داخل النطاق', 'ok');
+      result('CONFIRMED', 'ok', r.fullName + ' · ' + r.level + ' · ' + r.date + ' ' + r.time);
+      try { sessionStorage.removeItem('qrToken'); } catch (e) {}
+      refreshQrPill();
+    } else {
+      setPill('locPill', r.code === 'OUTSIDE_GEOFENCE' ? 'خارج النطاق' : 'لم يتحقق', 'bad');
+      result(r.code, r.code === 'ALREADY_RECORDED' ? 'info' : 'bad');
+    }
+  };
+})();
+</script>
+</body>
+</html>
