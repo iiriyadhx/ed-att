@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <title>تسجيل الحضور — الطوارئ</title>
+  <title>ED Attendance</title>
   <link rel="stylesheet" href="styles.css">
   <style>
     .levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -21,30 +21,30 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <h1 id="hospitalName">قسم الطوارئ</h1>
-    <p>تسجيل حضور المقيمين · Resident attendance</p>
+    <h1 id="hospitalName">Emergency Department</h1>
+    <p>Resident attendance</p>
   </header>
 
   <div class="card">
-    <div class="row"><span class="muted">رمز الشاشة</span><span class="pill" id="qrPill">—</span></div>
-    <div class="row" style="margin-top:10px"><span class="muted">الموقع</span><span class="pill" id="locPill">يُحدَّد عند الضغط</span></div>
+    <div class="row"><span class="muted">Screen QR</span><span class="pill" id="qrPill">—</span></div>
+    <div class="row" style="margin-top:10px"><span class="muted">Location</span><span class="pill" id="locPill">Checked when you submit</span></div>
   </div>
 
   <div class="card">
-    <label for="fullName">الاسم الثلاثي</label>
-    <input id="fullName" autocomplete="name" maxlength="60" placeholder="مثال: محمد عبدالله الأحمد">
+    <label for="fullName">Full name (first, father, family)</label>
+    <input id="fullName" autocomplete="name" maxlength="60" placeholder="e.g. Mohammed Abdullah Alahmad">
 
-    <label>المستوى</label>
-    <div class="levels" role="radiogroup" aria-label="المستوى">
+    <label>Level</label>
+    <div class="levels" role="radiogroup" aria-label="Level">
       <label><input type="radio" name="level" value="R1"><span>R1</span></label>
       <label><input type="radio" name="level" value="R2"><span>R2</span></label>
       <label><input type="radio" name="level" value="R3"><span>R3</span></label>
       <label><input type="radio" name="level" value="R4"><span>R4</span></label>
     </div>
 
-    <button id="btnSubmit">تسجيل الحضور</button>
+    <button id="btnSubmit">Register attendance</button>
     <div id="result"></div>
-    <p class="muted" style="margin-top:12px">يُقرأ موقعك لحظة الضغط فقط للتأكد أنك داخل نطاق المستشفى، ولا يتم تتبعك.</p>
+    <p class="muted" style="margin-top:12px">Your location is read only at the moment you submit, to confirm you are inside the hospital area. You are not tracked.</p>
   </div>
 </div>
 
@@ -69,10 +69,10 @@
     $('result').innerHTML = '<div class="result ' + cls + '">' + msg(code) + (extra ? '<div class="en">' + esc(extra) + '</div>' : '') + '</div>';
   }
   function refreshQrPill() {
-    if (!requireQr) { setPill('qrPill', 'غير مطلوب'); return; }
-    if (!qrToken()) setPill('qrPill', 'امسح رمز الشاشة', 'warn');
-    else if (qrAgeSec() > 150) setPill('qrPill', 'قديم — أعد المسح', 'warn');
-    else setPill('qrPill', 'تم المسح', 'ok');
+    if (!requireQr) { setPill('qrPill', 'Not required'); return; }
+    if (!qrToken()) setPill('qrPill', 'Scan the screen QR', 'warn');
+    else if (qrAgeSec() > 150) setPill('qrPill', 'Expired — scan again', 'warn');
+    else setPill('qrPill', 'Scanned', 'ok');
   }
   function selectedLevel() { const el = document.querySelector('input[name=level]:checked'); return el ? el.value : ''; }
 
@@ -108,7 +108,7 @@
       const timer = setTimeout(function () { finish(); }, maxWaitMs);
       watchId = navigator.geolocation.watchPosition(function (pos) {
         if (!best || pos.coords.accuracy < best.coords.accuracy) best = pos;
-        setPill('locPill', 'دقة ±' + Math.round(best.coords.accuracy) + ' م', best.coords.accuracy <= 30 ? 'ok' : 'warn');
+        setPill('locPill', 'Accuracy ±' + Math.round(best.coords.accuracy) + ' m', best.coords.accuracy <= 30 ? 'ok' : 'warn');
         if (pos.coords.accuracy <= goodEnoughM) finish();
       }, function (err) {
         if (err.code === 1) finish('LOCATION_DENIED');
@@ -125,17 +125,17 @@
 
     btn.disabled = true;
     $('result').innerHTML = '';
-    setPill('locPill', 'جاري تحديد الموقع…', 'warn');
+    setPill('locPill', 'Getting location…', 'warn');
     let pos;
     try {
       pos = await getBestPosition(15000, 15);
     } catch (code) {
-      setPill('locPill', 'فشل', 'bad');
+      setPill('locPill', 'Failed', 'bad');
       result(code, 'bad');
       btn.disabled = false;
       return;
     }
-    setPill('locPill', 'جاري التحقق على الخادم…', 'warn');
+    setPill('locPill', 'Verifying on server…', 'warn');
     const r = await api('submitAttendance', {
       fullName: fullName, level: level, deviceId: deviceId(),
       lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy,
@@ -146,12 +146,12 @@
     // A success state is shown ONLY when the server confirms the record was committed.
     if (r.ok && r.code === 'CONFIRMED') {
       store.set(NAME_KEY, fullName); store.set(LEVEL_KEY, level);
-      setPill('locPill', 'داخل النطاق', 'ok');
+      setPill('locPill', 'Inside the area', 'ok');
       result('CONFIRMED', 'ok', r.fullName + ' · ' + r.level + ' · ' + r.date + ' ' + r.time);
       try { sessionStorage.removeItem('qrToken'); } catch (e) {}
       refreshQrPill();
     } else {
-      setPill('locPill', r.code === 'OUTSIDE_GEOFENCE' ? 'خارج النطاق' : 'لم يتحقق', 'bad');
+      setPill('locPill', r.code === 'OUTSIDE_GEOFENCE' ? 'Outside the area' : 'Not verified', 'bad');
       result(r.code, r.code === 'ALREADY_RECORDED' ? 'info' : 'bad');
     }
   };

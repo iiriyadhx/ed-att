@@ -37,34 +37,33 @@ function deviceId() {
 }
 
 const MESSAGES = {
-  CONFIRMED:           ['تم تسجيل حضورك بنجاح', 'Attendance confirmed.'],
-  OUTSIDE_GEOFENCE:    ['مرفوض: أنت خارج نطاق المستشفى المعتمد', 'Attendance denied: You are outside the authorized hospital area.'],
-  LOCATION_MISSING:    ['مرفوض: تعذّر التحقق من موقعك', 'Attendance denied: Your location could not be verified.'],
-  LOCATION_UNRELIABLE: ['مرفوض: تعذّر التحقق من موقعك', 'Attendance denied: Your location could not be verified.'],
-  LOCATION_INACCURATE: ['مرفوض: دقة الموقع غير كافية. فعّل "الموقع الدقيق" واقترب من مدخل أو نافذة', 'Attendance denied: Location accuracy is too low.'],
-  LOCATION_STALE:      ['مرفوض: قراءة الموقع قديمة، أعد المحاولة', 'Attendance denied: Location reading is too old.'],
-  LOCATION_DENIED:     ['مرفوض: فشل التحقق من الموقع. فعّل خدمات الموقع للمتصفح وأعد المحاولة', 'Attendance denied: Location verification failed. Please enable location services and try again.'],
-  LOCATION_TIMEOUT:    ['مرفوض: لم نتمكن من تحديد موقعك في الوقت المحدد، أعد المحاولة', 'Attendance denied: Location could not be obtained in time.'],
-  NO_GEOLOCATION:      ['هذا المتصفح لا يدعم تحديد الموقع', 'This browser does not support location services.'],
-  NAME_INVALID:        ['اكتب اسمك الثلاثي كاملاً (ثلاث كلمات على الأقل، حروف فقط)', 'Enter your full name (at least three words, letters only).'],
-  LEVEL_INVALID:       ['اختر المستوى: R1 أو R2 أو R3 أو R4', 'Choose a level: R1, R2, R3 or R4.'],
-  DEVICE_INVALID:      ['تعذّر التعرف على الجهاز. افتح الصفحة في نافذة عادية (ليست خاصة)', 'Device could not be identified. Do not use private browsing.'],
-  DEVICE_USED_TODAY:   ['هذا الجوال سُجّل به حضور شخص آخر اليوم. كل مقيم يسجّل من جواله', 'This phone already registered someone else today.'],
-  NOT_AUTHORIZED:      ['غير مصرّح لك بهذا الإجراء', 'Not authorized.'],
-  ALREADY_RECORDED:    ['تم تسجيل حضورك مسبقاً اليوم', 'Attendance already recorded for today.'],
-  QR_INVALID:          ['مرفوض: امسح رمز QR المعروض حالياً على شاشة الطوارئ', 'Attendance denied: Scan the QR code currently shown on the ED screen.'],
-  RATE_LIMITED:        ['محاولات كثيرة، انتظر بضع دقائق', 'Too many attempts. Please wait a few minutes.'],
-  BUSY:                ['النظام مشغول، أعد المحاولة', 'System busy, please try again.'],
-  CONFIG_ERROR:        ['خطأ في إعدادات النظام، تواصل مع المسؤول', 'System configuration error.'],
-  SERVER_ERROR:        ['خطأ في الخادم، أعد المحاولة', 'Server error, please try again.'],
-  NETWORK:             ['تعذّر الاتصال بالخادم. تحقق من الإنترنت', 'Network error. Check your connection.'],
-  BAD_REQUEST:         ['طلب غير صالح', 'Invalid request.'],
-  REASON_REQUIRED:     ['اكتب سبباً واضحاً (10 أحرف على الأقل)', 'A reason of at least 10 characters is required.']
+  CONFIRMED:           'Attendance confirmed.',
+  OUTSIDE_GEOFENCE:    'Attendance denied: You are outside the authorized hospital area.',
+  LOCATION_MISSING:    'Attendance denied: Your location could not be verified.',
+  LOCATION_UNRELIABLE: 'Attendance denied: Your location could not be verified.',
+  LOCATION_INACCURATE: 'Attendance denied: Location accuracy is too low. Turn on Precise Location and move near an entrance or window.',
+  LOCATION_STALE:      'Attendance denied: Location reading is too old. Please try again.',
+  LOCATION_DENIED:     'Attendance denied: Location verification failed. Please enable location services and try again.',
+  LOCATION_TIMEOUT:    'Attendance denied: Location could not be obtained in time. Please try again.',
+  NO_GEOLOCATION:      'This browser does not support location services.',
+  NAME_INVALID:        'Enter your full name (at least three words, letters only).',
+  LEVEL_INVALID:       'Choose your level: R1, R2, R3 or R4.',
+  DEVICE_INVALID:      'This device could not be identified. Do not use private browsing.',
+  DEVICE_USED_TODAY:   'This phone has already registered someone else today. Each resident must use their own phone.',
+  NOT_AUTHORIZED:      'Not authorized.',
+  ALREADY_RECORDED:    'Attendance already recorded for today.',
+  QR_INVALID:          'Attendance denied: Scan the QR code currently shown on the ED screen.',
+  RATE_LIMITED:        'Too many attempts. Please wait a few minutes.',
+  BUSY:                'System busy. Please try again.',
+  CONFIG_ERROR:        'System configuration error. Contact the administrator.',
+  SERVER_ERROR:        'Server error. Please try again.',
+  NETWORK:             'Network error. Check your internet connection.',
+  BAD_REQUEST:         'Invalid request.',
+  REASON_REQUIRED:     'A reason of at least 10 characters is required.'
 };
 
 function msg(code) {
-  const m = MESSAGES[code] || MESSAGES.SERVER_ERROR;
-  return '<div>' + esc(m[0]) + '</div><div class="en">' + esc(m[1]) + '</div>';
+  return '<div>' + esc(MESSAGES[code] || MESSAGES.SERVER_ERROR) + '</div>';
 }
 
 function esc(s) {

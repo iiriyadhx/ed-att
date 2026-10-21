@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex">
-  <title>شاشة QR — الطوارئ</title>
+  <title>ED Attendance QR</title>
   <link rel="stylesheet" href="styles.css">
   <style>
     body { display: flex; min-height: 100vh; align-items: center; justify-content: center; }
@@ -18,8 +18,8 @@
 </head>
 <body>
 <div class="kiosk">
-  <h1 id="hospitalName">قسم الطوارئ</h1>
-  <div class="muted">امسح الرمز بكاميرا جوالك لتسجيل الحضور · Scan to register attendance</div>
+  <h1 id="hospitalName">Emergency Department</h1>
+  <div class="muted">Scan with your phone camera to register attendance</div>
   <div id="qr"></div>
   <div id="count"></div>
   <div id="err"></div>
@@ -35,7 +35,7 @@
   const p = new URLSearchParams(location.search);
   if (p.get('k')) { store.set(KEY, p.get('k')); history.replaceState(null, '', location.pathname); }
   const kioskKey = store.get(KEY);
-  if (!kioskKey) { $('err').innerHTML = '<div class="result bad">مفتاح الشاشة غير موجود. افتح الرابط الكامل الذي يحتوي ?k=</div>'; return; }
+  if (!kioskKey) { $('err').innerHTML = '<div class="result bad">Kiosk key missing. Open the full link that contains ?k=</div>'; return; }
 
   const qr = new QRCode($('qr'), { text: 'loading', width: 512, height: 512, correctLevel: QRCode.CorrectLevel.M });
   let left = 0, timer = null;
@@ -56,7 +56,7 @@
     clearInterval(timer);
     timer = setInterval(function () {
       left--;
-      $('count').textContent = 'يتجدد الرمز خلال ' + Math.max(0, left) + ' ثانية';
+      $('count').textContent = 'New code in ' + Math.max(0, left) + ' s';
       if (left <= 0) { clearInterval(timer); setTimeout(refresh, 800); }
     }, 1000);
   }

@@ -1,93 +1,93 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex">
-  <title>لوحة الإدارة — حضور الطوارئ</title>
+  <title>ED Attendance Admin</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="wrap wide">
   <header class="top">
-    <h1>لوحة إدارة الحضور</h1>
-    <p>Admin dashboard</p>
+    <h1>Attendance Admin</h1>
+    <p>Emergency Department residents</p>
   </header>
 
   <!-- Login -->
   <div id="login" class="card hidden" style="max-width:460px;margin:0 auto 14px">
-    <h2>دخول المسؤول</h2>
-    <label for="adminKey">مفتاح الإدارة</label>
+    <h2>Admin sign-in</h2>
+    <label for="adminKey">Admin key</label>
     <input id="adminKey" type="password" autocomplete="off" dir="ltr">
-    <button id="btnLogin">دخول</button>
+    <button id="btnLogin">Sign in</button>
     <div id="loginMsg"></div>
   </div>
 
   <section id="app" class="hidden">
     <div class="card">
       <div class="grid">
-        <div><label for="day">التاريخ</label><input id="day" type="date"></div>
-        <div><label for="q">بحث بالاسم</label><input id="q" placeholder="…"></div>
-        <div><label for="levelF">المستوى</label>
-          <select id="levelF"><option value="">الكل</option><option>R1</option><option>R2</option><option>R3</option><option>R4</option></select></div>
-        <div><label for="statusF">الحالة</label>
-          <select id="statusF"><option value="">الكل</option><option value="CONFIRMED">مؤكد</option><option value="VOIDED">ملغى</option></select></div>
+        <div><label for="day">Date</label><input id="day" type="date"></div>
+        <div><label for="q">Search by name</label><input id="q" placeholder="…"></div>
+        <div><label for="levelF">Level</label>
+          <select id="levelF"><option value="">All</option><option>R1</option><option>R2</option><option>R3</option><option>R4</option></select></div>
+        <div><label for="statusF">Status</label>
+          <select id="statusF"><option value="">All</option><option value="CONFIRMED">Confirmed</option><option value="VOIDED">Voided</option></select></div>
       </div>
       <div class="row" style="gap:10px">
-        <button id="btnLoad" class="secondary">تحديث</button>
-        <button id="btnLogout" class="secondary">خروج</button>
+        <button id="btnLoad" class="secondary">Refresh</button>
+        <button id="btnLogout" class="secondary">Sign out</button>
       </div>
     </div>
 
     <div class="grid">
-      <div class="card"><div class="muted">حاضر</div><div class="stat" id="sPresent">0</div></div>
+      <div class="card"><div class="muted">Present</div><div class="stat" id="sPresent">0</div></div>
       <div class="card"><div class="muted">R1 / R2 / R3 / R4</div><div class="stat" id="sLevels">0</div></div>
-      <div class="card"><div class="muted">محاولات مرفوضة</div><div class="stat" id="sRejected">0</div></div>
-      <div class="card"><div class="muted">مع علامات للمراجعة</div><div class="stat" id="sFlags">0</div></div>
+      <div class="card"><div class="muted">Rejected attempts</div><div class="stat" id="sRejected">0</div></div>
+      <div class="card"><div class="muted">Flagged for review</div><div class="stat" id="sFlags">0</div></div>
     </div>
 
     <div class="card">
-      <h2>تصدير Excel</h2>
+      <h2>Export to Excel</h2>
       <div class="grid">
-        <div><label for="eFrom">من</label><input id="eFrom" type="date"></div>
-        <div><label for="eTo">إلى</label><input id="eTo" type="date"></div>
+        <div><label for="eFrom">From</label><input id="eFrom" type="date"></div>
+        <div><label for="eTo">To</label><input id="eTo" type="date"></div>
       </div>
       <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
-        <button class="small secondary" data-range="today">اليوم</button>
-        <button class="small secondary" data-range="week">آخر 7 أيام</button>
-        <button class="small secondary" data-range="month">هذا الشهر</button>
-        <button class="small secondary" data-range="prevmonth">الشهر الماضي</button>
+        <button class="small secondary" data-range="today">Today</button>
+        <button class="small secondary" data-range="week">Last 7 days</button>
+        <button class="small secondary" data-range="month">This month</button>
+        <button class="small secondary" data-range="prevmonth">Last month</button>
       </div>
-      <button id="btnExport">تنزيل ملف Excel</button>
-      <p class="muted">الملف يحتوي: ملخص لكل مقيم بعدد أيام حضوره وتواريخها، سجل تفصيلي بالوقت والمسافة، وجدول أيام (✓) لكل مقيم.</p>
+      <button id="btnExport">Download Excel file</button>
+      <p class="muted">The file contains: a summary per resident (days attended and dates), a detailed log with time and distance, and a resident × date grid (✓).</p>
       <div id="eMsg"></div>
     </div>
 
     <div class="card">
-      <h2>سجل الحضور اليومي</h2>
+      <h2>Daily attendance</h2>
       <div class="table-scroll"><table>
-        <thead><tr><th>الوقت</th><th>الاسم الثلاثي</th><th>المستوى</th><th>الحالة</th><th>المسافة م</th><th>الدقة م</th><th>علامات</th><th></th></tr></thead>
+        <thead><tr><th>Time</th><th>Full name</th><th>Level</th><th>Status</th><th>Distance (m)</th><th>Accuracy (m)</th><th>Flags</th><th></th></tr></thead>
         <tbody id="tAtt"></tbody>
       </table></div>
     </div>
 
     <div class="card">
-      <h2>المحاولات المرفوضة</h2>
+      <h2>Rejected attempts</h2>
       <div class="table-scroll"><table>
-        <thead><tr><th>الوقت</th><th>الاسم</th><th>المستوى</th><th>السبب</th><th>تفاصيل</th></tr></thead>
+        <thead><tr><th>Time</th><th>Name</th><th>Level</th><th>Reason</th><th>Details</th></tr></thead>
         <tbody id="tRej"></tbody>
       </table></div>
     </div>
 
     <div class="card" id="voidCard">
-      <h2>إلغاء سجل (يُوثَّق في سجل التدقيق)</h2>
-      <p class="muted">لا يمكن إضافة حضور يدوياً. التسجيل يتم فقط من داخل الموقع. يمكن فقط إلغاء سجل خاطئ مع ذكر السبب.</p>
-      <label for="cAtt">رقم السجل</label>
-      <input id="cAtt" dir="ltr" readonly placeholder="اضغط «إلغاء» بجانب السجل في الجدول">
-      <label for="cReason">السبب (إلزامي)</label>
+      <h2>Void a record (logged in the audit trail)</h2>
+      <p class="muted">Attendance cannot be added manually — it can only be registered on site. You can only void an incorrect record, with a reason.</p>
+      <label for="cAtt">Record ID</label>
+      <input id="cAtt" dir="ltr" readonly placeholder="Press “Void” next to a record in the table">
+      <label for="cReason">Reason (required)</label>
       <textarea id="cReason" rows="2"></textarea>
-      <button id="btnVoid">إلغاء السجل</button>
+      <button id="btnVoid">Void record</button>
       <div id="cMsg"></div>
     </div>
   </section>
@@ -114,7 +114,7 @@
   }
 
   function statusPill(s) {
-    return '<span class="pill ' + (s === 'CONFIRMED' ? 'ok' : 'bad') + '">' + (s === 'CONFIRMED' ? 'مؤكد' : s === 'VOIDED' ? 'ملغى' : esc(s)) + '</span>';
+    return '<span class="pill ' + (s === 'CONFIRMED' ? 'ok' : 'bad') + '">' + (s === 'CONFIRMED' ? 'Confirmed' : s === 'VOIDED' ? 'Voided' : esc(s)) + '</span>';
   }
 
   function matches(r, q, lf) {
@@ -128,13 +128,13 @@
     $('tAtt').innerHTML = rows.map(r => '<tr><td>' + esc(r.time) + '</td><td>' + esc(r.fullName) + '</td><td>' + esc(r.level) +
       '</td><td>' + statusPill(r.status) + '</td><td>' + esc(r.distance) + '</td><td>' + esc(r.accuracy) + '</td><td>' +
       (r.flags ? '<span class="pill warn">' + esc(r.flags) + '</span>' : '') + '</td><td>' +
-      (r.status === 'CONFIRMED' ? '<button class="small secondary" data-void="' + esc(r.attendanceId) + '">إلغاء</button>' : esc(r.correctionRef)) +
-      '</td></tr>').join('') || '<tr><td colspan="8" class="muted">لا توجد سجلات</td></tr>';
+      (r.status === 'CONFIRMED' ? '<button class="small secondary" data-void="' + esc(r.attendanceId) + '">Void</button>' : esc(r.correctionRef)) +
+      '</td></tr>').join('') || '<tr><td colspan="8" class="muted">No records</td></tr>';
 
     const rej = data.rejected.filter(r => matches(r, q, lf));
     $('tRej').innerHTML = rej.map(r => '<tr><td>' + esc(r.time) + '</td><td>' + esc(r.fullName) + '</td><td>' + esc(r.level) + '</td><td>' +
-      esc((MESSAGES[r.reason] || [r.reason])[0]) + '</td><td class="muted" dir="ltr">' + esc(r.details) + '</td></tr>').join('') ||
-      '<tr><td colspan="5" class="muted">لا توجد</td></tr>';
+      esc(r.reason) + '</td><td class="muted" dir="ltr">' + esc(r.details) + '</td></tr>').join('') ||
+      '<tr><td colspan="5" class="muted">None</td></tr>';
 
     const ok = data.attendance.filter(r => r.status === 'CONFIRMED');
     $('sPresent').textContent = ok.length;
@@ -177,11 +177,11 @@
 
   $('btnVoid').onclick = async function () {
     if (!$('cAtt').value) return;
-    if (!confirm('تأكيد إلغاء السجل؟')) return;
+    if (!confirm('Void this record?')) return;
     this.disabled = true;
     const r = await api('adminVoid', { adminKey: adminKey(), attendanceId: $('cAtt').value, reason: $('cReason').value });
     this.disabled = false;
-    $('cMsg').innerHTML = '<div class="result ' + (r.ok ? 'ok' : 'bad') + '">' + (r.ok ? 'تم الإلغاء · ' + esc(r.correctionId) : msg(r.code)) + '</div>';
+    $('cMsg').innerHTML = '<div class="result ' + (r.ok ? 'ok' : 'bad') + '">' + (r.ok ? 'Record voided · ' + esc(r.correctionId) : msg(r.code)) + '</div>';
     if (r.ok) { $('cReason').value = ''; $('cAtt').value = ''; load(); }
   };
 
@@ -200,14 +200,14 @@
   });
 
   $('btnExport').onclick = async function () {
-    if (typeof XLSX === 'undefined') { $('eMsg').innerHTML = '<div class="result bad">تعذّر تحميل مكتبة Excel، تحقق من الإنترنت</div>'; return; }
+    if (typeof XLSX === 'undefined') { $('eMsg').innerHTML = '<div class="result bad">Could not load the Excel library. Check your internet connection.</div>'; return; }
     this.disabled = true;
     const r = await api('adminExport', { adminKey: adminKey(), from: $('eFrom').value, to: $('eTo').value });
     this.disabled = false;
     if (!r.ok) { $('eMsg').innerHTML = '<div class="result bad">' + msg(r.code) + '</div>'; return; }
     const wb = AttendanceExport.buildWorkbook(XLSX, r);
-    XLSX.writeFile(wb, 'حضور_المقيمين_' + r.from + '_الى_' + r.to + '.xlsx');
-    $('eMsg').innerHTML = '<div class="result ok">تم تنزيل الملف (' + r.rows.length + ' سجل)</div>';
+    XLSX.writeFile(wb, 'ED_attendance_' + r.from + '_to_' + r.to + '.xlsx');
+    $('eMsg').innerHTML = '<div class="result ok">File downloaded (' + r.rows.length + ' records)</div>';
   };
 
   if (adminKey()) load(); else show('login');
